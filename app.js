@@ -30,7 +30,7 @@ mongoose.set('useCreateIndex', true);
 
 // create and config document schema and model
 const userSchema = new mongoose.Schema({
-    email:String,
+    name:String,
     password:String,
     username:String,
     googleId:String,
@@ -62,7 +62,11 @@ app.get("/register",function(req,res){
     res.render("register");
 });
 app.get("/user/:username",function(req,res){
-    res.render("secrets",{userName:req.params.username});
+    if (req.isAuthenticated()){
+        res.render("secrets",{userName:req.params.username});
+    }else{
+        res.redirect("/login");
+    }
 });
 app.get("/logout",function(req,res){
     req.logout();
@@ -71,17 +75,17 @@ app.get("/logout",function(req,res){
 
 // config post requests
 app.post("/login",passport.authenticate("local",{failureRedirect:"/login"}),function(req,res){
-    res.redirect("/user/"+req.user.username);
+    res.redirect("/user/"+req.user.name);
 });
 app.post("/register",function(req,res){
-    const email = req.body.email;
+    const email = req.body.username;
     const password = req.body.password;
-    const userName = _.toLower(req.body.Name);
-    User.register({username:userName,email:email},password,function(err,user){
+    const Name = _.toLower(req.body.name);
+    User.register({name:Name,username:email},password,function(err,user){
         if(!err){
-            User.authenticate("local")(req,res,function(){
+            passport.authenticate("local")(req,res,function(){
                 console.log(user);
-                res.redirect("/user/"+user.username);
+                res.redirect("/user/"+user.name);
             });
         }else{
             console.log(err);
